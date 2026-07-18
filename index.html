@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrueTax | Apuração Assistida IBS/CBS para grandes operações | XVAL</title>
+  <meta name="description" content="O TrueTax automatiza a conciliação entre os seus documentos fiscais e o Fisco em tempo real, evitando passivos milionários com o IBS e a CBS. Feito para grandes empresas, BPOs fiscais e consultorias tributárias." />
+  <meta property="og:title" content="TrueTax | Apuração Assistida IBS/CBS" />
+  <meta property="og:description" content="A ponte segura entre os seus documentos fiscais e o Governo. Conciliação automática, alertas de divergência e validação contínua dos seus XMLs." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="public/logo_principal_dark.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="public/truetax_favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="public/truetax_favicon-16.png" />
+  <link rel="apple-touch-icon" href="public/truetax_apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --bg-soft: #101010;
+      --card: #141414;
+      --card-hover: #181818;
+      --border: #232323;
+      --border-soft: #1C1C1C;
+      --lime: #A3E635;
+      --lime-soft: rgba(163, 230, 53, 0.12);
+      --lime-dim: rgba(163, 230, 53, 0.35);
+      --cyan: #22D3EE;
+      --purple: #A78BFA;
+      --red: #F87171;
+      --red-soft: rgba(248, 113, 113, 0.12);
+      --amber: #FBBF24;
+      --text: #F5F5F4;
+      --text-dim: #A1A1AA;
+      --text-mute: #71717A;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+    section { position: relative; }
+
+    /* ============ BADGES & BUTTONS ============ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+      background: var(--lime-soft); color: var(--lime);
+      border: 1px solid rgba(163, 230, 53, 0.25);
+    }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(163,230,53,.5);} 50% { opacity: .7; box-shadow: 0 0 0 6px rgba(163,230,53,0);} }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 32px; border-radius: 999px;
+      font-family: var(--font); font-size: 15.5px; font-weight: 700;
+      text-decoration: none; cursor: pointer; border: none;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--lime); color: #0A0A0A;
+      box-shadow: 0 0 0 0 rgba(163,230,53,.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(163,230,53,.28); }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--lime-dim); color: var(--lime); transform: translateY(-2px); }
+
+    .eyebrow {
+      display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--lime); margin-bottom: 16px;
+    }
+    h2.section-title {
+      font-size: clamp(30px, 4.2vw, 44px);
+      font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .section-sub { color: var(--text-dim); font-size: 17.5px; max-width: 680px; }
+    .accent { color: var(--lime); }
+
+    /* ============ NAV ============ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 10, 0.82); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-img { height: 30px; width: auto; display: block; mix-blend-mode: screen; }
+    .logo-by { font-size: 12px; color: var(--text-mute); font-weight: 500; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14.5px; font-weight: 600; transition: color .15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { padding: 10px 22px; font-size: 14px; }
+    @media (max-width: 860px) { .nav-links a:not(.btn) { display: none; } }
+
+    /* ============ HERO ============ */
+    .hero {
+      padding: 150px 0 90px;
+      background:
+        radial-gradient(ellipse 60% 45% at 70% 5%, rgba(163,230,53,0.07), transparent),
+        radial-gradient(ellipse 45% 40% at 15% 25%, rgba(34,211,238,0.05), transparent),
+        var(--bg);
+    }
+    .hero-grid { text-align: center; max-width: 880px; margin: 0 auto; }
+    .hero-logo { height: 52px; width: auto; display: block; margin: 0 auto 26px; mix-blend-mode: screen; }
+    .hero h1 {
+      font-size: clamp(36px, 5.6vw, 62px);
+      font-weight: 800; line-height: 1.08; letter-spacing: -0.028em;
+      margin: 28px 0 24px;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px); color: var(--text-dim);
+      max-width: 760px; margin: 0 auto 36px; line-height: 1.65;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+    .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; }
+    .hero-integrations { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; }
+    .hero-integrations .label { font-size: 12.5px; color: var(--text-mute); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-right: 6px; width: 100%; margin-bottom: 4px; }
+    .int-badge {
+      padding: 7px 15px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .int-badge svg { flex-shrink: 0; }
+
+    /* ============ DASHBOARD MOCKUP ============ */
+    .mockup-wrap { margin-top: 64px; position: relative; }
+    .mockup-glow {
+      position: absolute; inset: -8% -6%;
+      background: radial-gradient(ellipse 55% 55% at 50% 45%, rgba(163,230,53,0.09), transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .browser {
+      position: relative; z-index: 1;
+      background: #101010; border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 40px 90px -30px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.02) inset;
+      text-align: left;
+    }
+    .browser-bar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 18px; background: #0D0D0D; border-bottom: 1px solid var(--border-soft);
+    }
+    .browser-dots { display: flex; gap: 7px; }
+    .browser-dots span { width: 11px; height: 11px; border-radius: 50%; background: #2A2A2A; }
+    .browser-url {
+      flex: 1; max-width: 380px; margin: 0 auto;
+      background: #161616; border: 1px solid var(--border-soft); border-radius: 8px;
+      padding: 5px 14px; font-family: var(--mono); font-size: 11.5px; color: var(--text-mute);
+      display: flex; align-items: center; gap: 8px; justify-content: center;
+    }
+    .browser-url .lock { color: var(--lime); }
+
+    .app { display: grid; grid-template-columns: 216px 1fr; min-height: 520px; }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } .app-sidebar { display: none; } }
+
+    .app-sidebar {
+      background: #0C0C0C; border-right: 1px solid var(--border-soft);
+      padding: 20px 14px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .app-logo { display: flex; align-items: center; gap: 9px; padding: 4px 10px 18px; }
+    .app-logo-name { font-weight: 700; font-size: 15px; }
+    .side-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 9px;
+      font-size: 13px; font-weight: 600; color: var(--text-mute);
+    }
+    .side-item svg { flex-shrink: 0; opacity: .8; }
+    .side-item.active { background: var(--lime-soft); color: var(--lime); }
+    .side-section { font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: #4A4A4E; padding: 16px 12px 6px; font-weight: 700; }
+
+    .app-main { padding: 22px 26px; background: #111111; min-width: 0; }
+    .app-topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+    .company-select {
+      display: flex; align-items: center; gap: 10px;
+      background: #181818; border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 14px; font-size: 13px; font-weight: 600;
+    }
+    .company-select .cnpj { font-family: var(--mono); font-size: 11px; color: var(--text-mute); font-weight: 400; }
+    .company-select .chev { color: var(--text-mute); margin-left: 4px; }
+    .conn-status {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 999px;
+      background: var(--lime-soft); border: 1px solid rgba(163,230,53,.25);
+      font-size: 12px; font-weight: 600; color: var(--lime);
+    }
+    .conn-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); animation: pulse 2.2s infinite; }
+
+    .app-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .app-h1 { font-size: 18px; font-weight: 700; }
+    .app-h1 span { color: var(--text-mute); font-weight: 500; font-size: 13px; margin-left: 10px; }
+    .period-pill { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); background: #181818; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 720px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    .kpi {
+      background: #161616; border: 1px solid var(--border-soft); border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .kpi .k-label { font-size: 11px; color: var(--text-mute); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .kpi .k-value { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+    .kpi .k-delta { font-size: 11px; font-weight: 600; margin-top: 3px; }
+    .k-lime { color: var(--lime); } .k-red { color: var(--red); } .k-cyan { color: var(--cyan); }
+
+    .dash-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .dash-grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: #161616; border: 1px solid var(--border-soft); border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .panel-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .panel-sub { font-size: 11px; color: var(--text-mute); margin-bottom: 14px; }
+    .legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-dim); }
+    .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; }
+
+    .alert-item {
+      display: flex; gap: 11px; align-items: flex-start;
+      padding: 11px 12px; border-radius: 10px; margin-bottom: 8px;
+      border: 1px solid transparent;
+    }
+    .alert-item.crit { background: var(--red-soft); border-color: rgba(248,113,113,.22); }
+    .alert-item.warn { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.18); }
+    .alert-item.ok { background: var(--lime-soft); border-color: rgba(163,230,53,.2); }
+    .alert-ico { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+    .crit .alert-ico { background: rgba(248,113,113,.18); color: var(--red); }
+    .warn .alert-ico { background: rgba(251,191,36,.15); color: var(--amber); }
+    .ok .alert-ico { background: rgba(163,230,53,.18); color: var(--lime); }
+    .alert-txt { font-size: 12px; font-weight: 600; line-height: 1.4; }
+    .alert-meta { font-size: 10.5px; color: var(--text-mute); font-weight: 400; font-family: var(--mono); margin-top: 2px; }
+
+    /* ============ PROBLEM ============ */
+    .section { padding: 100px 0; }
+    .section-dark { background: var(--bg); }
+    .section-tinted {
+      background:
+        radial-gradient(ellipse 50% 60% at 85% 10%, rgba(167,139,250,0.05), transparent),
+        radial-gradient(ellipse 40% 50% at 10% 90%, rgba(34,211,238,0.04), transparent),
+        var(--bg-soft);
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 52px; }
+    @media (max-width: 860px) { .cards-3 { grid-template-columns: 1fr; } }
+    .risk-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 30px 28px; transition: border-color .2s, transform .2s;
+    }
+    .risk-card:hover { border-color: rgba(248,113,113,.35); transform: translateY(-3px); }
+    .risk-card .num {
+      font-family: var(--mono); font-size: 13px; font-weight: 600;
+      color: var(--red); margin-bottom: 16px; display: block;
+    }
+    .risk-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.01em; }
+    .risk-card p { font-size: 14.5px; color: var(--text-dim); }
+
+    .scale-callout {
+      margin-top: 28px; padding: 26px 32px;
+      background: linear-gradient(135deg, rgba(248,113,113,.07), rgba(251,191,36,.05));
+      border: 1px solid rgba(248,113,113,.2); border-radius: 18px;
+      display: flex; gap: 18px; align-items: center;
+    }
+    .scale-callout .big-ico {
+      width: 48px; height: 48px; border-radius: 13px; flex-shrink: 0;
+      background: var(--red-soft); color: var(--red);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .scale-callout p { font-size: 16px; color: var(--text); font-weight: 500; }
+    .scale-callout strong { color: var(--red); }
+    @media (max-width: 640px) { .scale-callout { flex-direction: column; align-items: flex-start; } }
+
+    /* ============ TIMELINE ============ */
+    .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 56px; position: relative; }
+    @media (max-width: 860px) { .timeline { grid-template-columns: 1fr; gap: 24px; } .timeline::before { display: none; } .t-item { padding-left: 0 !important; } }
+    .timeline::before {
+      content: ''; position: absolute; top: 7px; left: 2%; right: 2%;
+      height: 2px; background: linear-gradient(90deg, var(--lime), var(--cyan), var(--purple), #3F3F46);
+      opacity: .5;
+    }
+    .t-item { position: relative; padding: 28px 20px 0 0; }
+    .t-item .t-dot {
+      position: absolute; top: 0; left: 0;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 3px solid var(--lime);
+    }
+    .t-item:nth-child(2) .t-dot { border-color: var(--cyan); }
+    .t-item:nth-child(3) .t-dot { border-color: var(--purple); }
+    .t-item:nth-child(4) .t-dot { border-color: #52525B; }
+    .t-year { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--lime); margin-bottom: 8px; }
+    .t-item:nth-child(2) .t-year { color: var(--cyan); }
+    .t-item:nth-child(3) .t-year { color: var(--purple); }
+    .t-item:nth-child(4) .t-year { color: var(--text-dim); }
+    .t-item h4 { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+    .t-item p { font-size: 13.5px; color: var(--text-dim); }
+    .timeline-head { margin-top: 84px; }
+    .timeline-head h3 { font-size: clamp(21px, 2.8vw, 28px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; max-width: 640px; margin-top: 4px; }
+    .t-now {
+      display: inline-block; margin-left: 8px; padding: 3px 10px; border-radius: 999px;
+      background: var(--lime); color: #0A0A0A; font-family: var(--font);
+      font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      vertical-align: 2px;
+    }
+
+    /* ============ SOLUTION / FEATURES ============ */
+    .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 52px; }
+    @media (max-width: 1000px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 28px 24px; transition: border-color .2s, transform .2s, background .2s;
+    }
+    .feature-card:hover { border-color: var(--lime-dim); transform: translateY(-3px); background: var(--card-hover); }
+    .feature-ico {
+      width: 46px; height: 46px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+    }
+    .f-lime { background: var(--lime-soft); color: var(--lime); }
+    .f-cyan { background: rgba(34,211,238,.1); color: var(--cyan); }
+    .f-purple { background: rgba(167,139,250,.1); color: var(--purple); }
+    .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 9px; letter-spacing: -0.01em; }
+    .feature-card p { font-size: 14px; color: var(--text-dim); }
+
+    /* ============ VALIDATION MOCKUP ============ */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; margin-top: 80px; }
+    @media (max-width: 940px) { .split { grid-template-columns: 1fr; gap: 40px; } }
+    .split-copy h3 { font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px; }
+    .split-copy p { color: var(--text-dim); font-size: 16px; margin-bottom: 18px; }
+    .check-list { list-style: none; margin-top: 8px; }
+    .check-list li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; font-size: 15px; color: var(--text-dim); }
+    .check-list li strong { color: var(--text); }
+    .check-list .ck { color: var(--lime); flex-shrink: 0; margin-top: 3px; }
+
+    .nf-mock {
+      position: relative;
+      background: #101010; border: 1px solid var(--border); border-radius: 16px;
+      padding: 26px; box-shadow: 0 30px 70px -25px rgba(0,0,0,.8);
+    }
+    .nf-mock .mock-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .nf-mock .mock-title { font-size: 14px; font-weight: 700; }
+    .nf-mock .mock-title span { display: block; font-size: 11px; color: var(--text-mute); font-weight: 500; margin-top: 2px; }
+    .nf-field { margin-bottom: 13px; }
+    .nf-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .nf-input {
+      background: #181818; border: 1px solid var(--border); border-radius: 9px;
+      padding: 10px 13px; font-family: var(--mono); font-size: 12.5px; color: var(--text);
+    }
+    .nf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .nf-input.validated { border-color: rgba(163,230,53,.5); position: relative; }
+    .nf-input .val-check { color: var(--lime); float: right; font-weight: 700; }
+
+    .toast {
+      position: absolute; right: -18px; bottom: 34px;
+      background: #161B10; border: 1px solid rgba(163,230,53,.4); border-radius: 14px;
+      padding: 16px 18px; width: 300px;
+      box-shadow: 0 20px 50px -12px rgba(0,0,0,.9), 0 0 30px -8px rgba(163,230,53,.15);
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+    @media (max-width: 640px) { .toast { position: static; width: 100%; margin-top: 16px; } }
+    .toast-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    .toast-head img { width: 24px; height: 24px; border-radius: 7px; display: block; }
+    .toast-head strong { font-size: 13px; }
+    .toast-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed #26290F; }
+    .toast-row:last-of-type { border-bottom: none; }
+    .toast-row .lbl { color: var(--text-mute); }
+    .toast-row .val { font-family: var(--mono); font-weight: 600; color: var(--lime); }
+    .toast-foot { font-size: 10.5px; color: var(--text-mute); margin-top: 8px; font-family: var(--mono); }
+
+    /* ============ RESULTS ============ */
+    .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 56px; }
+    @media (max-width: 1000px) { .results-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .results-grid { grid-template-columns: 1fr; } }
+    .result-item { padding: 8px 4px; }
+    .result-num {
+      font-size: clamp(40px, 5vw, 56px); font-weight: 800; letter-spacing: -0.03em;
+      color: var(--lime); line-height: 1; margin-bottom: 14px;
+    }
+    .result-num small { font-size: .45em; font-weight: 700; letter-spacing: 0; }
+    .result-item h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; }
+    .result-item p { font-size: 14px; color: var(--text-dim); }
+
+    /* ============ INTELIGÊNCIA TRIBUTÁRIA ============ */
+    .intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 52px; }
+    @media (max-width: 940px) { .intel-grid { grid-template-columns: 1fr; } }
+    .intel-card {
+      background: #101010; border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; transition: border-color .2s, transform .2s;
+      display: flex; flex-direction: column;
+    }
+    .intel-card:hover { transform: translateY(-3px); border-color: var(--lime-dim); }
+    .intel-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; background: #0D0D0D; border-bottom: 1px solid var(--border-soft);
+    }
+    .intel-bar .browser-dots span { width: 9px; height: 9px; }
+    .intel-url { font-family: var(--mono); font-size: 11px; color: var(--text-mute); }
+    .intel-body { padding: 20px 22px; flex: 1; display: flex; flex-direction: column; }
+    .intel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .intel-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .intel-head h3 { font-size: 16.5px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; }
+    .intel-head p { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; }
+
+    .intel-kpi {
+      background: linear-gradient(145deg, rgba(163,230,53,0.08), transparent);
+      border: 1px solid rgba(163,230,53,0.2); border-radius: 11px;
+      padding: 12px 15px; margin-bottom: 12px;
+    }
+    .intel-kpi .k-label { font-size: 10.5px; color: var(--text-mute); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .intel-kpi .k-value { font-size: 24px; font-weight: 800; color: var(--lime); letter-spacing: -0.02em; }
+    .intel-kpi.magenta { background: linear-gradient(145deg, rgba(217,70,239,0.08), transparent); border-color: rgba(217,70,239,0.25); }
+    .intel-kpi.magenta .k-value { color: #D946EF; }
+
+    .intel-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 2px; border-bottom: 1px dashed var(--border-soft); gap: 10px;
+    }
+    .intel-row:last-of-type { border-bottom: none; }
+    .intel-row .r-doc { font-size: 12.5px; font-weight: 600; }
+    .intel-row .r-doc span { display: block; font-size: 11px; color: var(--text-mute); font-weight: 400; }
+    .intel-row .r-val { font-family: var(--mono); font-size: 12px; color: var(--lime); font-weight: 600; white-space: nowrap; }
+
+    .score-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .score-row .s-name { font-size: 12.5px; font-weight: 600; width: 128px; flex-shrink: 0; }
+    .score-track { flex: 1; height: 10px; background: #1B1B1B; border-radius: 999px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 999px; }
+    .score-row .s-pct { font-family: var(--mono); font-size: 11.5px; width: 38px; text-align: right; color: var(--text-dim); }
+    .score-badge {
+      width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; font-family: var(--mono);
+    }
+    .sb-a { background: var(--lime-soft); color: var(--lime); }
+    .sb-b { background: rgba(34,211,238,.12); color: var(--cyan); }
+    .sb-c { background: rgba(251,191,36,.12); color: var(--amber); }
+    .sb-d { background: var(--red-soft); color: var(--red); }
+
+    .cash-chart { display: flex; align-items: flex-end; gap: 8px; height: 130px; padding: 6px 2px 0; }
+    .cash-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; height: 100%; }
+    .cash-seg { border-radius: 4px 4px 0 0; }
+    .cash-seg.retained { background: rgba(217,70,239,.55); border-radius: 4px; }
+    .cash-seg.net { background: rgba(163,230,53,.5); }
+    .cash-lbl { font-family: var(--mono); font-size: 9.5px; color: var(--text-mute); text-align: center; margin-top: 6px; }
+    .intel-legend { display: flex; gap: 16px; font-size: 11px; color: var(--text-dim); margin-top: 10px; }
+    .intel-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; }
+
+    .rule-check {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 9px; margin-bottom: 7px;
+      background: #161616; border: 1px solid var(--border-soft);
+    }
+    .rule-check.bad { background: var(--red-soft); border-color: rgba(248,113,113,.25); }
+    .rule-check .rc-info { min-width: 0; }
+    .rule-check .rc-code { font-family: var(--mono); font-size: 10.5px; color: var(--cyan); font-weight: 600; }
+    .rule-check .rc-desc { font-size: 12px; font-weight: 600; }
+    .rc-status {
+      font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      padding: 4px 9px; border-radius: 6px; white-space: nowrap;
+    }
+    .rc-ok { background: var(--lime-soft); color: var(--lime); }
+    .rc-alert { background: rgba(248,113,113,.16); color: var(--red); }
+
+    .intel-foot { margin-top: auto; padding-top: 12px; font-size: 11px; color: var(--text-mute); font-family: var(--mono); }
+
+    .intel-callout {
+      margin-top: 26px; padding: 24px 30px;
+      background: linear-gradient(135deg, rgba(163,230,53,.06), rgba(34,211,238,.04));
+      border: 1px solid rgba(163,230,53,.18); border-radius: 16px;
+      display: flex; gap: 18px; align-items: center;
+    }
+    .intel-callout .big-ico {
+      width: 48px; height: 48px; border-radius: 13px; flex-shrink: 0;
+      background: var(--lime-soft); color: var(--lime);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .intel-callout p { font-size: 15.5px; color: var(--text); font-weight: 500; }
+    .intel-callout strong { color: var(--lime); }
+    @media (max-width: 640px) { .intel-callout { flex-direction: column; align-items: flex-start; } }
+
+    /* ============ AUDIENCE ============ */
+    .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 52px; }
+    @media (max-width: 860px) { .audience-grid { grid-template-columns: 1fr; } }
+    .aud-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+      padding: 40px 36px; position: relative; overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .aud-card:hover { transform: translateY(-3px); }
+    .aud-card.corp:hover { border-color: var(--lime-dim); }
+    .aud-card.bpo:hover { border-color: rgba(34,211,238,.4); }
+    .aud-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .aud-card.corp::before { background: linear-gradient(90deg, var(--lime), transparent); }
+    .aud-card.bpo::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+    .aud-tag {
+      display: inline-block; padding: 6px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .corp .aud-tag { background: var(--lime-soft); color: var(--lime); }
+    .bpo .aud-tag { background: rgba(34,211,238,.1); color: var(--cyan); }
+    .aud-card h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
+    .aud-card > p { color: var(--text-dim); font-size: 15px; margin-bottom: 20px; }
+    .aud-list { list-style: none; }
+    .aud-list li { display: flex; gap: 11px; padding: 7px 0; font-size: 14.5px; color: var(--text-dim); align-items: flex-start; }
+    .aud-list li strong { color: var(--text); }
+    .corp .aud-list .ck { color: var(--lime); }
+    .bpo .aud-list .ck { color: var(--cyan); }
+    .aud-list .ck { flex-shrink: 0; margin-top: 3px; }
+
+    /* ============ AUTHORITY ============ */
+    .authority {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    @media (max-width: 900px) { .authority { grid-template-columns: 1fr; gap: 36px; } }
+    .authority-copy p { color: var(--text-dim); font-size: 16.5px; margin-bottom: 18px; }
+    .xval-logo { height: 40px; width: auto; display: block; margin-bottom: 22px; }
+    .authority-copy p strong { color: var(--text); }
+    .auth-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .auth-pill {
+      padding: 9px 18px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .auth-pill .ic { color: var(--lime); }
+    .auth-panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+      padding: 36px;
+    }
+    .auth-stat { display: flex; gap: 18px; align-items: flex-start; padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
+    .auth-stat:last-child { border-bottom: none; padding-bottom: 0; }
+    .auth-stat:first-child { padding-top: 0; }
+    .auth-stat .as-ico {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-stat h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .auth-stat p { font-size: 13.5px; color: var(--text-dim); }
+
+    /* ============ CTA / FORM ============ */
+    .cta-section {
+      padding: 110px 0;
+      background:
+        radial-gradient(ellipse 55% 65% at 50% 0%, rgba(163,230,53,0.08), transparent),
+        var(--bg-soft);
+      border-top: 1px solid var(--border-soft);
+    }
+    .cta-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 72px; align-items: start; }
+    @media (max-width: 940px) { .cta-grid { grid-template-columns: 1fr; gap: 44px; } }
+    .cta-copy h2 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.12; margin-bottom: 20px; }
+    .cta-copy > p { color: var(--text-dim); font-size: 17px; margin-bottom: 30px; }
+    .cta-points { list-style: none; }
+    .cta-points li { display: flex; gap: 13px; padding: 9px 0; font-size: 15.5px; color: var(--text-dim); align-items: flex-start; }
+    .cta-points .ck { color: var(--lime); flex-shrink: 0; margin-top: 3px; }
+    .cta-points strong { color: var(--text); }
+
+    .form-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+      padding: 38px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 7px; }
+    .form-group label .req { color: var(--lime); }
+    .form-control {
+      width: 100%; background: #0F0F0F; border: 1px solid var(--border); border-radius: 11px;
+      padding: 13px 15px; font-family: var(--font); font-size: 14.5px; color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .form-control:focus { outline: none; border-color: var(--lime-dim); box-shadow: 0 0 0 3px rgba(163,230,53,.08); }
+    .form-control::placeholder { color: #52525B; }
+    select.form-control {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      cursor: pointer;
+    }
+    textarea.form-control { resize: vertical; min-height: 96px; }
+    .form-submit { width: 100%; margin-top: 6px; }
+    .form-note { font-size: 12.5px; color: var(--text-mute); text-align: center; margin-top: 14px; }
+    .form-success {
+      display: none; text-align: center; padding: 60px 20px;
+    }
+    .form-success .s-ico {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--lime-soft);
+      color: var(--lime); display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; border: 1px solid rgba(163,230,53,.3);
+    }
+    .form-success h3 { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    .form-success p { color: var(--text-dim); font-size: 15px; }
+
+    /* ============ FOOTER ============ */
+    footer { border-top: 1px solid var(--border-soft); padding: 48px 0 40px; background: var(--bg); }
+    .footer-grid { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .footer-logo { display: flex; align-items: center; gap: 14px; }
+    .footer-logo img { height: 30px; width: auto; display: block; }
+    .footer-logo span { color: var(--text-mute); font-size: 13px; font-weight: 500; padding-left: 14px; border-left: 1px solid var(--border-soft); }
+    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+    .footer-links a { color: var(--text-mute); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color .15s; }
+    .footer-links a:hover { color: var(--lime); }
+    .footer-copy { font-size: 12.5px; color: #52525B; width: 100%; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+    /* ============ REVEAL ANIMATION ============ */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .toast, .badge .dot, .conn-status .dot { animation: none; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav>
+    <div class="container nav-inner">
+      <a class="logo" href="#">
+        <img class="logo-img" src="public/truetax_logo_dark_transparente.svg" alt="TrueTax" />
+        <span class="logo-by">por XVAL</span>
+      </a>
+      <div class="nav-links">
+        <a href="#problema">O risco</a>
+        <a href="#solucao">Solução</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#inteligencia">Inteligência</a>
+        <a href="#publico">Para quem</a>
+        <a href="#contato" class="btn btn-primary nav-cta">Agendar Diagnóstico</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <img class="hero-logo" src="public/truetax_logo_dark_transparente.svg" alt="TrueTax" />
+        <span class="badge"><span class="dot"></span> Por XVAL · Tecnologia com régua alta</span>
+        <h1>A Reforma Tributária mudou as regras. Sua empresa está pronta para a <span class="accent">Apuração Assistida?</span></h1>
+        <p class="hero-sub">
+          Não confirme erros por inércia. O TrueTax automatiza a conciliação entre os seus documentos
+          fiscais e o Fisco em tempo real, evitando passivos milionários com o <strong>IBS e a CBS</strong>.
+          Feito para grandes operações, BPOs fiscais e consultorias tributárias.
+        </p>
+        <div class="hero-ctas">
+          <a href="#contato" class="btn btn-primary">Agendar Diagnóstico Gratuito
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#solucao" class="btn btn-ghost">Ver como funciona</a>
+        </div>
+        <div class="hero-integrations">
+          <span class="label">Conectado ao ecossistema fiscal</span>
+          <span class="int-badge">NF-e</span>
+          <span class="int-badge">NFC-e</span>
+          <span class="int-badge">NFS-e</span>
+          <span class="int-badge">CT-e</span>
+          <span class="int-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A3E635" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Receita Federal
+          </span>
+          <span class="int-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A3E635" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            Comitê Gestor do IBS
+          </span>
+          <span class="int-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            mTLS ICP-Brasil
+          </span>
+        </div>
+
+        <!-- ===== DASHBOARD MOCKUP ===== -->
+        <div class="mockup-wrap reveal">
+          <div class="mockup-glow"></div>
+          <div class="browser">
+            <div class="browser-bar">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url"><span class="lock">🔒</span> app.truetax.com.br/conciliacao</div>
+              <div style="width:53px"></div>
+            </div>
+            <div class="app">
+              <aside class="app-sidebar">
+                <div class="app-logo">
+                  <img src="public/truetax_icone.png" alt="" style="width:28px;height:28px;border-radius:7px;display:block;" />
+                  <div class="app-logo-name">True<span style="color:var(--lime)">Tax</span></div>
+                </div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                  Visão Geral
+                </div>
+                <div class="side-item active">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 21H3v-5M21 3l-7 7M3 21l7-7"/></svg>
+                  Conciliação IBS/CBS
+                </div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                  Divergências
+                </div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                  Documentos Fiscais
+                </div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 15 4-6 4 3 5-7"/></svg>
+                  Créditos
+                </div>
+                <div class="side-section">Administração</div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Certificados
+                </div>
+                <div class="side-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Equipe
+                </div>
+              </aside>
+              <div class="app-main">
+                <div class="app-topbar">
+                  <div class="company-select">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A3E635" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                    Metalúrgica Andrade S.A.
+                    <span class="cnpj">12.345.678/0001-90</span>
+                    <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                  <div class="conn-status"><span class="dot"></span> Conectado via mTLS · Receita Federal</div>
+                </div>
+                <div class="app-title-row">
+                  <div class="app-h1">Conciliação IBS/CBS <span>Repositório de XMLs × Apuração Assistida</span></div>
+                  <div class="period-pill">Período: 06/2026 &nbsp;·&nbsp; Prazo de manifestação: 12 dias</div>
+                </div>
+                <div class="kpi-row">
+                  <div class="kpi">
+                    <div class="k-label">Documentos conciliados</div>
+                    <div class="k-value">48.217</div>
+                    <div class="k-delta k-lime">99,2% do período</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="k-label">Divergências abertas</div>
+                    <div class="k-value k-red">37</div>
+                    <div class="k-delta" style="color:var(--text-mute)">R$ 1,24 mi em risco</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="k-label">Créditos IBS/CBS</div>
+                    <div class="k-value k-lime">R$ 8,6 mi</div>
+                    <div class="k-delta k-lime">100% apropriados</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="k-label">Saldo a recolher</div>
+                    <div class="k-value">R$ 3,2 mi</div>
+                    <div class="k-delta k-cyan">conferido com seus XMLs</div>
+                  </div>
+                </div>
+                <div class="dash-grid">
+                  <div class="panel">
+                    <div class="panel-title">
+                      Débitos vs Créditos · IBS/CBS
+                      <div class="legend">
+                        <span><i style="background:#3F3F46"></i>Débitos</span>
+                        <span><i style="background:var(--lime)"></i>Créditos</span>
+                      </div>
+                    </div>
+                    <div class="panel-sub">Comparativo mensal · Seus XMLs × Fisco (R$ milhões)</div>
+                    <svg viewBox="0 0 420 190" width="100%" style="display:block" role="img" aria-label="Gráfico de barras comparando débitos e créditos de IBS/CBS por mês">
+                      <g stroke="#232323" stroke-width="1">
+                        <line x1="30" y1="20" x2="410" y2="20"/><line x1="30" y1="60" x2="410" y2="60"/>
+                        <line x1="30" y1="100" x2="410" y2="100"/><line x1="30" y1="140" x2="410" y2="140"/>
+                      </g>
+                      <g font-family="JetBrains Mono, monospace" font-size="9" fill="#71717A">
+                        <text x="8" y="23">12</text><text x="8" y="63">9</text><text x="8" y="103">6</text><text x="8" y="143">3</text>
+                      </g>
+                      <!-- Jan -->
+                      <rect x="46" y="86" width="20" height="74" rx="4" fill="#3F3F46"/>
+                      <rect x="70" y="104" width="20" height="56" rx="4" fill="#A3E635"/>
+                      <!-- Fev -->
+                      <rect x="108" y="72" width="20" height="88" rx="4" fill="#3F3F46"/>
+                      <rect x="132" y="96" width="20" height="64" rx="4" fill="#A3E635"/>
+                      <!-- Mar -->
+                      <rect x="170" y="80" width="20" height="80" rx="4" fill="#3F3F46"/>
+                      <rect x="194" y="90" width="20" height="70" rx="4" fill="#A3E635"/>
+                      <!-- Abr -->
+                      <rect x="232" y="58" width="20" height="102" rx="4" fill="#3F3F46"/>
+                      <rect x="256" y="84" width="20" height="76" rx="4" fill="#A3E635"/>
+                      <!-- Mai -->
+                      <rect x="294" y="66" width="20" height="94" rx="4" fill="#3F3F46"/>
+                      <rect x="318" y="78" width="20" height="82" rx="4" fill="#A3E635"/>
+                      <!-- Jun -->
+                      <rect x="356" y="48" width="20" height="112" rx="4" fill="#3F3F46"/>
+                      <rect x="380" y="70" width="20" height="90" rx="4" fill="#A3E635"/>
+                      <g font-family="JetBrains Mono, monospace" font-size="9.5" fill="#71717A" text-anchor="middle">
+                        <text x="68" y="176">Jan</text><text x="130" y="176">Fev</text><text x="192" y="176">Mar</text>
+                        <text x="254" y="176">Abr</text><text x="316" y="176">Mai</text><text x="378" y="176">Jun</text>
+                      </g>
+                    </svg>
+                  </div>
+                  <div class="panel">
+                    <div class="panel-title">Alertas de divergência</div>
+                    <div class="panel-sub">Priorizado por materialidade</div>
+                    <div class="alert-item crit">
+                      <div class="alert-ico">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                      </div>
+                      <div>
+                        <div class="alert-txt">Divergência de Alíquota NCM encontrada</div>
+                        <div class="alert-meta">NF-e 48.291 · NCM 8483.40.10 · Δ R$ 412.780,00</div>
+                      </div>
+                    </div>
+                    <div class="alert-item warn">
+                      <div class="alert-ico">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                      </div>
+                      <div>
+                        <div class="alert-txt">Crédito não refletido na apuração do Fisco</div>
+                        <div class="alert-meta">CT-e 9.104 · aguardando manifestação · Δ R$ 96.310,00</div>
+                      </div>
+                    </div>
+                    <div class="alert-item ok">
+                      <div class="alert-ico">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                      </div>
+                      <div>
+                        <div class="alert-txt">Contestação aceita pelo Comitê Gestor</div>
+                        <div class="alert-meta">Lote 2026-06-B · 14 documentos · resolvido</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ PROBLEMA ============ -->
+  <section id="problema" class="section section-tinted">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">O novo risco fiscal</span>
+        <h2 class="section-title">O Fisco agora monta a sua apuração.<br />Você vai <span class="accent">apenas aceitar?</span></h2>
+        <p class="section-sub">
+          Com a Reforma Tributária do Consumo, a lógica se inverteu. O governo consolida seus documentos
+          fiscais e entrega uma apuração pré-preenchida de IBS e CBS. Se a sua empresa não conferir e
+          contestar no prazo, o valor é considerado aceito e vira confissão de dívida. Erros de
+          classificação na emissão da nota agora se transformam rapidamente em prejuízo financeiro.
+        </p>
+      </div>
+      <div class="cards-3">
+        <div class="risk-card reveal">
+          <span class="num">01</span>
+          <h3>Apuração pré-preenchida</h3>
+          <p>A Receita Federal e o Comitê Gestor do IBS cruzam todos os seus documentos fiscais eletrônicos (NF-e, NFC-e, NFS-e, CT-e) e apresentam débitos e créditos já calculados, com base no que foi emitido, certo ou errado.</p>
+        </div>
+        <div class="risk-card reveal">
+          <span class="num">02</span>
+          <h3>Prazo curto de contestação</h3>
+          <p>A janela de manifestação é contada em dias, não em meses. Quem depende de fechamento manual e planilhas descobre a divergência quando o prazo legal já expirou.</p>
+        </div>
+        <div class="risk-card reveal">
+          <span class="num">03</span>
+          <h3>Confissão de dívida por inércia</h3>
+          <p>Sem manifestação no prazo, a apuração do Fisco é presumida correta e o crédito tributário se constitui automaticamente. O silêncio da sua operação vale como assinatura.</p>
+        </div>
+      </div>
+      <div class="scale-callout reveal">
+        <div class="big-ico">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        </div>
+        <p>
+          Em operações com <strong>milhares de notas fiscais por mês</strong>, a conferência manual é inviável,
+          e o risco cresce proporcionalmente ao volume de documentos. Um único erro sistemático de NCM ou
+          alíquota, replicado em escala, vira um passivo milionário dentro de um único período de apuração.
+        </p>
+      </div>
+
+      <div class="timeline-head reveal">
+        <span class="eyebrow">Calendário da transição</span>
+        <h3>De 2026 a 2033, as regras mudam quase todo ano. Seu processo fiscal precisa acompanhar.</h3>
+      </div>
+      <div class="timeline reveal">
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2026 <span class="t-now">estamos aqui</span></div>
+          <h4>Fase educativa e piloto</h4>
+          <p>Alíquotas-teste de 0,1% (IBS) e 0,9% (CBS) destacadas nos documentos fiscais. Piloto da apuração assistida rodando em produção com empresas convidadas. Quem cumpre as obrigações acessórias fica dispensado do recolhimento, mas o Fisco já enxerga a qualidade dos seus dados.</p>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2027</div>
+          <h4>CBS integral e Imposto Seletivo</h4>
+          <p>A CBS substitui PIS e Cofins em alíquota cheia, o Imposto Seletivo entra em vigor e o IPI é praticamente zerado. A partir daqui, divergência não contestada vira dívida de verdade, em dinheiro grande.</p>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2029 a 2032</div>
+          <h4>Dois sistemas ao mesmo tempo</h4>
+          <p>ICMS e ISS caem gradualmente, 10% ao ano, enquanto o IBS sobe na mesma proporção. Apuração em regime duplo, créditos em dois mundos e o período de maior complexidade operacional da transição.</p>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2033</div>
+          <h4>Regime pleno</h4>
+          <p>ICMS e ISS extintos, IBS e CBS integralmente em vigor. A apuração assistida vira o padrão definitivo de relacionamento com o Fisco. Quem automatizou cedo chega com processo maduro e histórico limpo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SOLUÇÃO ============ -->
+  <section id="solucao" class="section section-dark">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">A solução</span>
+        <h2 class="section-title">TrueTax: a ponte segura entre<br />o seu ERP e <span class="accent">o Governo.</span></h2>
+        <p class="section-sub">
+          Desenvolvido pela XVAL, o TrueTax acessa o repositório de XMLs da sua operação e realiza a
+          integração síncrona com as APIs da Receita Federal e do Comitê Gestor do IBS, garantindo
+          controle total, com evidências, sobre a sua apuração.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-ico f-lime">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 21H3v-5M21 3l-7 7M3 21l7-7"/></svg>
+          </div>
+          <h3>Conciliação Automática</h3>
+          <p>Cruzamento em tempo real dos XMLs do seu repositório com a apuração assistida do governo, documento a documento, com trilha de auditoria completa.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ico f-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6z"/></svg>
+          </div>
+          <h3>Conformidade Fácil</h3>
+          <p>Validação de classificação tributária e alíquotas em cada XML que chega ao repositório, apontando o erro a tempo de corrigir e contestar dentro do prazo.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ico f-purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          </div>
+          <h3>Alertas de Divergência</h3>
+          <p>Identificação proativa de inconsistências, priorizadas por materialidade, para correção e contestação dentro do prazo legal de manifestação.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ico f-lime">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3>Segurança Total</h3>
+          <p>Comunicação via mTLS e suporte completo a certificados ICP-Brasil, com a régua de segurança da XVAL em cada camada da operação.</p>
+        </div>
+      </div>
+
+      <!-- ===== MOCKUP CONFORMIDADE FÁCIL ===== -->
+      <div class="split">
+        <div class="split-copy reveal">
+          <span class="eyebrow">Validação contínua</span>
+          <h3>Valide a tributação de <span class="accent">cada XML</span> da sua operação.</h3>
+          <p>
+            O TrueTax se conecta ao repositório de documentos fiscais da sua empresa ou dos seus clientes
+            e analisa cada XML contra as regras vigentes de IBS e CBS. Sem projeto pesado de implantação:
+            apontou o repositório, a análise começa.
+          </p>
+          <ul class="check-list">
+            <li><span class="ck">✓</span><span><strong>NCM e classificação tributária</strong> verificados item a item, documento a documento.</span></li>
+            <li><span class="ck">✓</span><span><strong>Alíquotas corretas de IBS e CBS</strong> conferidas na hora, incluindo regimes diferenciados e reduções.</span></li>
+            <li><span class="ck">✓</span><span><strong>Erro identificado a tempo</strong> de corrigir e contestar dentro do prazo legal de manifestação.</span></li>
+            <li><span class="ck">✓</span><span><strong>Integração com o seu ERP no roadmap</strong>, para validar a tributação antes mesmo da emissão.</span></li>
+          </ul>
+        </div>
+        <div class="nf-mock reveal">
+          <div class="mock-head">
+            <div class="mock-title">Validação de XML <span>NF-e · repositório de documentos fiscais</span></div>
+            <span class="badge" style="font-size:11px;padding:5px 12px;">Análise automática</span>
+          </div>
+          <div class="nf-field">
+            <label>Chave de acesso</label>
+            <div class="nf-input">3526 0612 3456 7800 0190 5500 1000 0482 91…</div>
+          </div>
+          <div class="nf-field">
+            <label>Descrição do item</label>
+            <div class="nf-input">Redutor de velocidade industrial 30CV</div>
+          </div>
+          <div class="nf-row">
+            <div class="nf-field">
+              <label>NCM</label>
+              <div class="nf-input validated">8483.40.10 <span class="val-check">✓</span></div>
+            </div>
+            <div class="nf-field">
+              <label>CFOP</label>
+              <div class="nf-input validated">5102 <span class="val-check">✓</span></div>
+            </div>
+          </div>
+          <div class="nf-row">
+            <div class="nf-field">
+              <label>Valor unitário</label>
+              <div class="nf-input">R$ 42.900,00</div>
+            </div>
+            <div class="nf-field">
+              <label>Quantidade</label>
+              <div class="nf-input">12</div>
+            </div>
+          </div>
+          <div class="toast" role="status">
+            <div class="toast-head">
+              <img src="public/truetax_icone.png" alt="" style="width:24px;height:24px;border-radius:7px;display:block;" />
+              <strong>Tributação validada</strong>
+            </div>
+            <div class="toast-row"><span class="lbl">NCM 8483.40.10</span><span class="val">✓ válido</span></div>
+            <div class="toast-row"><span class="lbl">Alíquota IBS</span><span class="val">0,10%</span></div>
+            <div class="toast-row"><span class="lbl">Alíquota CBS</span><span class="val">0,90%</span></div>
+            <div class="toast-row"><span class="lbl">Regime</span><span class="val">padrão</span></div>
+            <div class="toast-foot">resposta em 38ms · via mTLS ICP-Brasil</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADOS ============ -->
+  <section id="resultados" class="section section-tinted">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">Benefícios</span>
+        <h2 class="section-title">Resultados que dão <span class="accent">para medir.</span></h2>
+        <p class="section-sub">Menos teatro, mais entrega. O TrueTax existe para transformar risco fiscal em números que a diretoria entende.</p>
+      </div>
+      <div class="results-grid">
+        <div class="result-item reveal">
+          <div class="result-num">Zero</div>
+          <h3>Multas por inércia</h3>
+          <p>Nenhum recolhimento indevido por falta de conferência. Toda apuração do Fisco é conciliada e manifestada dentro do prazo.</p>
+        </div>
+        <div class="result-item reveal">
+          <div class="result-num">100<small>%</small></div>
+          <h3>Créditos aproveitados</h3>
+          <p>Aproveitamento correto dos créditos de IBS e CBS a que sua operação tem direito, sem deixar dinheiro na mesa.</p>
+        </div>
+        <div class="result-item reveal">
+          <div class="result-num">-90<small>%</small></div>
+          <h3>Trabalho manual</h3>
+          <p>Redução drástica de processos manuais e planilhas de conciliação. Seu time tributário analisa exceções, não digita dados.</p>
+        </div>
+        <div class="result-item reveal">
+          <div class="result-num">2026<small>→27</small></div>
+          <h3>Transição previsível</h3>
+          <p>Previsibilidade na virada tributária: quem valida os sistemas na fase-teste de 2026 entra em 2027 com a operação blindada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTELIGÊNCIA TRIBUTÁRIA ============ -->
+  <section id="inteligencia" class="section section-dark">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">Inteligência Tributária</span>
+        <h2 class="section-title">Além da conciliação: análises que colocam <span class="accent">dinheiro de volta na mesa.</span></h2>
+        <p class="section-sub">Os mesmos dados granulares da conciliação, cruzados com a visão externa do Fisco, viram produtos de inteligência que ERPs tradicionais não conseguem oferecer.</p>
+      </div>
+
+      <div class="intel-grid">
+        <!-- Card 1: Caça a Créditos Perdidos -->
+        <div class="intel-card reveal">
+          <div class="intel-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <span class="intel-url">app.truetax.com.br/creditos-perdidos</span>
+          </div>
+          <div class="intel-body">
+            <div class="intel-head">
+              <div class="intel-ico f-lime">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+              </div>
+              <div>
+                <h3>Caça a créditos perdidos</h3>
+                <p>Notas emitidas contra o seu CNPJ que nunca entraram no ERP.</p>
+              </div>
+            </div>
+            <div class="intel-kpi">
+              <div class="k-label">Créditos IBS/CBS não apropriados · mês atual</div>
+              <div class="k-value">R$ 312.450,00</div>
+            </div>
+            <div class="intel-row">
+              <div class="r-doc">NF-e 85.007 <span>Distribuidora Gama S.A. · R$ 230.100,00</span></div>
+              <div class="r-val">+ R$ 20.249</div>
+            </div>
+            <div class="intel-row">
+              <div class="r-doc">NF-e 84.291 <span>Fornecedor Alfa Ltda. · R$ 45.900,00</span></div>
+              <div class="r-val">+ R$ 4.039</div>
+            </div>
+            <div class="intel-row">
+              <div class="r-doc">CT-e 84.512 <span>Transportadora Beta · R$ 12.300,00</span></div>
+              <div class="r-val">+ R$ 1.082</div>
+            </div>
+            <div class="intel-foot">fonte: API Receita (notas contra o CNPJ) × lançamentos do ERP</div>
+          </div>
+        </div>
+
+        <!-- Card 2: Score de Fornecedores -->
+        <div class="intel-card reveal">
+          <div class="intel-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <span class="intel-url">app.truetax.com.br/rating-fornecedores</span>
+          </div>
+          <div class="intel-body">
+            <div class="intel-head">
+              <div class="intel-ico f-cyan">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15v-4M12 15V7M17 15v-6"/></svg>
+              </div>
+              <div>
+                <h3>Rating fiscal de fornecedores</h3>
+                <p>Quem gera passivo e retrabalho para o seu time tributário.</p>
+              </div>
+            </div>
+            <div class="score-row">
+              <span class="score-badge sb-d">D</span>
+              <span class="s-name">Metalúrgica Delta</span>
+              <div class="score-track"><div class="score-fill" style="width:88%; background:var(--red);"></div></div>
+              <span class="s-pct">22%</span>
+            </div>
+            <div class="score-row">
+              <span class="score-badge sb-c">C</span>
+              <span class="s-name">Transportadora Beta</span>
+              <div class="score-track"><div class="score-fill" style="width:60%; background:var(--amber);"></div></div>
+              <span class="s-pct">15%</span>
+            </div>
+            <div class="score-row">
+              <span class="score-badge sb-b">B</span>
+              <span class="s-name">Distribuidora Gama</span>
+              <div class="score-track"><div class="score-fill" style="width:20%; background:var(--cyan);"></div></div>
+              <span class="s-pct">5%</span>
+            </div>
+            <div class="score-row">
+              <span class="score-badge sb-a">A</span>
+              <span class="s-name">Fornecedor Alfa</span>
+              <div class="score-track"><div class="score-fill" style="width:8%; background:var(--lime);"></div></div>
+              <span class="s-pct">2%</span>
+            </div>
+            <div class="intel-legend" style="margin-top:14px;">% de notas com divergência de alíquota ou NCM · últimos 90 dias</div>
+            <div class="intel-foot">fonte: agregação da camada Gold por CNPJ emissor</div>
+          </div>
+        </div>
+
+        <!-- Card 3: Simulador de Split Payment -->
+        <div class="intel-card reveal">
+          <div class="intel-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <span class="intel-url">app.truetax.com.br/split-payment</span>
+          </div>
+          <div class="intel-body">
+            <div class="intel-head">
+              <div class="intel-ico" style="background:rgba(217,70,239,.12); color:#D946EF;">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div>
+                <h3>Simulador de split payment</h3>
+                <p>Quanto do faturamento será retido na fonte, semana a semana.</p>
+              </div>
+            </div>
+            <div class="intel-kpi magenta">
+              <div class="k-label">Retenção média projetada na fonte</div>
+              <div class="k-value">26,5% do faturamento</div>
+            </div>
+            <div class="cash-chart">
+              <div class="cash-col"><div class="cash-seg retained" style="height:22%;"></div><div class="cash-seg net" style="height:48%;"></div><div class="cash-lbl">S1</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:24%;"></div><div class="cash-seg net" style="height:53%;"></div><div class="cash-lbl">S2</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:23%;"></div><div class="cash-seg net" style="height:50%;"></div><div class="cash-lbl">S3</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:26%;"></div><div class="cash-seg net" style="height:58%;"></div><div class="cash-lbl">S4</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:25%;"></div><div class="cash-seg net" style="height:55%;"></div><div class="cash-lbl">S5</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:28%;"></div><div class="cash-seg net" style="height:63%;"></div><div class="cash-lbl">S6</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:27%;"></div><div class="cash-seg net" style="height:60%;"></div><div class="cash-lbl">S7</div></div>
+              <div class="cash-col"><div class="cash-seg retained" style="height:30%;"></div><div class="cash-seg net" style="height:68%;"></div><div class="cash-lbl">S8</div></div>
+            </div>
+            <div class="intel-legend"><span><i style="background:rgba(217,70,239,.7);"></i>Retido na fonte (split)</span><span><i style="background:rgba(163,230,53,.6);"></i>Caixa líquido</span></div>
+            <div class="intel-foot">fonte: prazos de pagamento dos XMLs + alíquotas CBS/IBS vigentes</div>
+          </div>
+        </div>
+
+        <!-- Card 4: Malha Fina Preventiva -->
+        <div class="intel-card reveal">
+          <div class="intel-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <span class="intel-url">app.truetax.com.br/shadow-audit</span>
+          </div>
+          <div class="intel-body">
+            <div class="intel-head">
+              <div class="intel-ico f-purple">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div>
+                <h3>Malha fina preventiva</h3>
+                <p>As regras do Fisco rodando dentro de casa, antes do envio.</p>
+              </div>
+            </div>
+            <div class="rule-check">
+              <div class="rc-info"><div class="rc-code">RF-104</div><div class="rc-desc">Batimento de saídas vs livro fiscal</div></div>
+              <span class="rc-status rc-ok">OK</span>
+            </div>
+            <div class="rule-check bad">
+              <div class="rc-info"><div class="rc-code">RF-207</div><div class="rc-desc">Créditos apropriados vs notas de entrada</div></div>
+              <span class="rc-status rc-alert">Δ R$ 50.000</span>
+            </div>
+            <div class="rule-check">
+              <div class="rc-info"><div class="rc-code">RF-311</div><div class="rc-desc">Alíquota CBS/IBS consistente por NCM</div></div>
+              <span class="rc-status rc-ok">OK</span>
+            </div>
+            <div class="rule-check">
+              <div class="rc-info"><div class="rc-code">CG-052</div><div class="rc-desc">Recolhimento via split payment conciliado</div></div>
+              <span class="rc-status rc-ok">OK</span>
+            </div>
+            <div class="intel-foot">1 bloqueio potencial detectado antes do envio da apuração</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="intel-callout reveal">
+        <div class="big-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>
+        </div>
+        <p>Nenhum custo adicional de coleta: <strong>os mesmos XMLs da conciliação alimentam todas as análises</strong>. É a visão externa do Fisco, que o seu ERP não tem, transformada em decisão de negócio.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PÚBLICO-ALVO ============ -->
+  <section id="publico" class="section section-dark">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">Para quem é</span>
+        <h2 class="section-title">Feito para quem opera <span class="accent">em escala.</span></h2>
+      </div>
+      <div class="audience-grid">
+        <div class="aud-card corp reveal">
+          <span class="aud-tag">Grandes empresas</span>
+          <h3>Time tributário interno com controle total</h3>
+          <p>
+            Indústrias, varejistas, distribuidoras e empresas de serviços com alto volume de
+            NF-e, NFC-e, NFS-e e CT-e.
+          </p>
+          <ul class="aud-list">
+            <li><span class="ck">✓</span><span><strong>Conexão direta ao repositório de XMLs</strong> da sua operação, sem depender de projeto de integração com o ERP.</span></li>
+            <li><span class="ck">✓</span><span><strong>Visibilidade e controle total</strong> sobre a apuração assistida, por CNPJ e por estabelecimento.</span></li>
+            <li><span class="ck">✓</span><span><strong>Trilha de auditoria completa</strong>: cada conciliação, contestação e aceite fica registrado como evidência.</span></li>
+            <li><span class="ck">✓</span><span>Dashboards executivos para levar risco fiscal e créditos ao <strong>CFO em tempo real</strong>.</span></li>
+          </ul>
+        </div>
+        <div class="aud-card bpo reveal">
+          <span class="aud-tag">Consultorias e BPOs fiscais</span>
+          <h3>Gestão multiempresa em um único painel</h3>
+          <p>
+            Consultorias tributárias, BPOs fiscais e escritórios contábeis que respondem pela
+            apuração de dezenas ou centenas de clientes.
+          </p>
+          <ul class="aud-list">
+            <li><span class="ck">✓</span><span>Conecte os repositórios de XMLs dos seus clientes e monitore a apuração de <strong>centenas de CNPJs</strong> em uma única tela.</span></li>
+            <li><span class="ck">✓</span><span><strong>Priorização por materialidade</strong>: sua equipe ataca primeiro as divergências que valem mais.</span></li>
+            <li><span class="ck">✓</span><span>Gestão de <strong>certificados ICP-Brasil e procurações</strong> por cliente, sem malabarismo operacional.</span></li>
+            <li><span class="ck">✓</span><span>Entregue <strong>mais valor por cliente</strong> com menos esforço, e transforme a Reforma em receita nova.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AUTORIDADE XVAL ============ -->
+  <section class="section section-tinted">
+    <div class="container">
+      <div class="authority">
+        <div class="authority-copy reveal">
+          <img class="xval-logo" src="public/xval_logomarca_val_branco_transparente_trim.png" alt="XVAL" />
+          <span class="eyebrow">Por trás do produto</span>
+          <h2 class="section-title">Tecnologia que <span class="accent">vira resultado.</span></h2>
+          <p>
+            O TrueTax não é apenas um software fiscal. É uma solução de engenharia de software
+            construída pela <strong>XVAL</strong>.
+          </p>
+          <p>
+            Aplicamos nossa expertise em desenvolvimento, segurança da informação e infraestrutura
+            cloud para garantir que sua operação fiscal <strong>não pare e não vaze dados</strong>.
+            Menos teatro, mais entrega: cada integração é testada, monitorada e documentada com a
+            régua alta que aplicamos em todos os nossos projetos.
+          </p>
+          <div class="auth-pills">
+            <span class="auth-pill"><span class="ic">●</span> Engenharia de software</span>
+            <span class="auth-pill"><span class="ic">●</span> Segurança da informação</span>
+            <span class="auth-pill"><span class="ic">●</span> Infraestrutura cloud</span>
+            <span class="auth-pill"><span class="ic">●</span> Processamento de documentos fiscais</span>
+          </div>
+        </div>
+        <div class="auth-panel reveal">
+          <div class="auth-stat">
+            <div class="as-ico f-lime">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <div>
+              <h4>Segurança de ponta a ponta</h4>
+              <p>mTLS com certificados ICP-Brasil, criptografia em trânsito e em repouso, segregação por cliente e princípio do menor privilégio.</p>
+            </div>
+          </div>
+          <div class="auth-stat">
+            <div class="as-ico f-cyan">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div>
+              <h4>Operação contínua</h4>
+              <p>Arquitetura cloud resiliente com monitoramento 24/7. O fechamento fiscal não espera, e a plataforma também não.</p>
+            </div>
+          </div>
+          <div class="auth-stat">
+            <div class="as-ico f-purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+            </div>
+            <div>
+              <h4>Evidências, não promessas</h4>
+              <p>Toda conciliação e manifestação gera registro auditável. Se o Fisco perguntar, a resposta já está documentada.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA / FORM ============ -->
+  <section id="contato" class="cta-section">
+    <div class="container">
+      <div class="cta-grid">
+        <div class="cta-copy reveal">
+          <span class="eyebrow">Próximo passo</span>
+          <h2>Vamos blindar sua <span class="accent">apuração fiscal?</span></h2>
+          <p>
+            Deixe seus dados. Retornamos em até <strong style="color:var(--text)">1 dia útil</strong> com um
+            plano de implantação do TrueTax na sua operação.
+          </p>
+          <ul class="cta-points">
+            <li><span class="ck">✓</span><span><strong>Diagnóstico gratuito</strong> do seu cenário de apuração assistida.</span></li>
+            <li><span class="ck">✓</span><span>Mapa de conexão ao seu repositório de XMLs e aos certificados digitais.</span></li>
+            <li><span class="ck">✓</span><span>Estimativa de exposição a risco com base no seu volume de documentos.</span></li>
+            <li><span class="ck">✓</span><span>Sem compromisso e sem apresentação enlatada de 40 slides.</span></li>
+          </ul>
+        </div>
+        <div class="form-card reveal">
+          <form id="lead-form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nome">Nome <span class="req">*</span></label>
+                <input class="form-control" type="text" id="nome" name="nome" placeholder="Seu nome completo" required autocomplete="name" />
+              </div>
+              <div class="form-group">
+                <label for="email">E-mail corporativo <span class="req">*</span></label>
+                <input class="form-control" type="email" id="email" name="email" placeholder="voce@empresa.com.br" required autocomplete="email" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresa">Empresa <span class="req">*</span></label>
+                <input class="form-control" type="text" id="empresa" name="empresa" placeholder="Razão social ou nome fantasia" required autocomplete="organization" />
+              </div>
+              <div class="form-group">
+                <label for="cargo">Cargo</label>
+                <input class="form-control" type="text" id="cargo" name="cargo" placeholder="Ex.: Gerente Tributário" autocomplete="organization-title" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="erp">ERP utilizado</label>
+                <select class="form-control" id="erp" name="erp">
+                  <option value="">Selecione…</option>
+                  <option>SAP</option>
+                  <option>Oracle</option>
+                  <option>TOTVS</option>
+                  <option>Sankhya</option>
+                  <option>Senior</option>
+                  <option>Sistema proprietário</option>
+                  <option>Outro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="perfil">Perfil <span class="req">*</span></label>
+                <select class="form-control" id="perfil" name="perfil" required>
+                  <option value="">Selecione…</option>
+                  <option>Empresa</option>
+                  <option>Consultoria ou BPO</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="mensagem">Mensagem</label>
+              <textarea class="form-control" id="mensagem" name="mensagem" placeholder="Conte brevemente sobre sua operação: volume de notas, número de CNPJs, principais dores…"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary form-submit">Solicitar Diagnóstico
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p class="form-note">Seus dados são usados apenas para retorno comercial. Nada de spam.</p>
+          </form>
+          <div class="form-success" id="form-success">
+            <div class="s-ico">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <h3>Recebido!</h3>
+            <p>Obrigado pelo interesse no TrueTax.<br />Nossa equipe retorna em até 1 dia útil com o seu plano de implantação.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-logo">
+          <img src="public/xval_logomarca_val_branco_transparente_trim.png" alt="XVAL" />
+          <span>Tecnologia com régua alta</span>
+        </div>
+        <div class="footer-links">
+          <a href="#problema">O risco</a>
+          <a href="#solucao">Solução</a>
+          <a href="#inteligencia">Inteligência</a>
+          <a href="#publico">Para quem</a>
+          <a href="#contato">Contato</a>
+          <a href="#">Política de Privacidade</a>
+        </div>
+        <div class="footer-copy">
+          <span>© 2026 XVAL. Todos os direitos reservados.</span>
+          <span>TrueTax® é um produto XVAL · Apuração Assistida IBS/CBS</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    // Form: front-end only por enquanto; apontar para o backend/CRM quando definido
+    const form = document.getElementById('lead-form');
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      // TODO: enviar payload para endpoint de leads (ex.: fetch('/api/leads', {...}))
+      form.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
